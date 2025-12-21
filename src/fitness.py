@@ -19,10 +19,12 @@ def evaluate_fitness(individual, graph):
     # If conflicts = 0, fitness is high
     num_colors_used = len(np.unique(individual.genes))
     if conflicts == 0:
-        # High fitness 
-        individual.fitness = 1000 + (1.0 / num_colors_used)
+        # High fitness
+        # There's no conflict, so reward based on number of colors used 
+        individual.fitness = 1.0 + (1.0 / num_colors_used)
     else:
         # Lower fitness
-        individual.fitness = 1.0 / (conflicts + 1)
+        # The more the conflicts, the lower the fitness
+        individual.fitness = 1.0 / (1 + conflicts)
 
     return individual.fitness
