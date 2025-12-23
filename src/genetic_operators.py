@@ -69,7 +69,7 @@ def random_resetting(individual, mutation_rate=0.01, max_colors=10):
         if random.random() < mutation_rate:
             individual.genes[i] = random.randint(0, max_colors - 1)
 
-def swap_mutation(individual, mutation_rate=0.01):
+def swap_mutation(individual, mutation_rate=0.01, max_colors = 10):
     """
     Swap two genes in the individual with a given mutation rate.
     """

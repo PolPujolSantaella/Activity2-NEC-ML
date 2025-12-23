@@ -10,7 +10,7 @@ def evaluate_fitness(individual, graph):
 
         # If two nodes adjacent have the same gene. It's a conflict.
         if individual.genes[u - 1] == individual.genes[v - 1]:
-            print(f"Conflict between node {u} and node {v}")
+            # print(f"Conflict between node {u} and node {v}")
             conflicts += 1
         
     individual.conflicts = conflicts

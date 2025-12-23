@@ -15,7 +15,7 @@ class Individual:
         return len(self.genes)
     
     def copy(self):
-        new_ind = Individual(len(self.genes), 0)
+        new_ind = Individual(len(self.genes), 1)
         new_ind.genes = np.copy(self.genes)
         new_ind.fitness = self.fitness
         new_ind.conflicts = self.conflicts
