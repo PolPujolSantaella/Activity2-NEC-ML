@@ -1,30 +1,21 @@
 import numpy as np
 
-def evaluate_fitness(individual, graph):
+def evaluate_fitness(individual, graph_edges, conflict_weight=1000):
     """
     Calculate fitness based on conflicts.
     """
+    
+    # Get colors for all 'u' nodes and 'v' nodes simultaneously
+    u_colors = individual.genes[graph_edges[:, 0]]
+    v_colors = individual.genes[graph_edges[:, 1]]
+    conflicts = np.sum(u_colors == v_colors)    
 
-    conflicts = 0
-    for u, v in graph.edges():
-
-        # If two nodes adjacent have the same gene. It's a conflict.
-        if individual.genes[u - 1] == individual.genes[v - 1]:
-            # print(f"Conflict between node {u} and node {v}")
-            conflicts += 1
-        
     individual.conflicts = conflicts
 
-    # Fitness Function: Maximize this value
-    # If conflicts = 0, fitness is high
+    # Fitness (minimization)
+    # Fitness = (conflict_weight * number_of_conflicts) + number_of_colors_used
+    
     num_colors_used = len(np.unique(individual.genes))
-    if conflicts == 0:
-        # High fitness
-        # There's no conflict, so reward based on number of colors used 
-        individual.fitness = 1.0 + (1.0 / num_colors_used)
-    else:
-        # Lower fitness
-        # The more the conflicts, the lower the fitness
-        individual.fitness = 1.0 / (1 + conflicts)
+    individual.fitness = conflict_weight * conflicts + num_colors_used
 
     return individual.fitness

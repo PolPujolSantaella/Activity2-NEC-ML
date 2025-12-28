@@ -1,35 +1,39 @@
 import random
+import numpy as np
+
 from src.chromosome import Individual
 from src.fitness import evaluate_fitness
 
 def run_genetic_algorithm(graph, pop_size, max_generations, max_colors,
                           selection_func, crossover_func, mutation_func,
-                          mutation_rate, elitism_count=2):
+                          mutation_rate=None, elitism_count=2, stationary_limit=200):
     
     num_nodes = graph.number_of_nodes()
+    edges_array = np.array(graph.edges()) - 1
 
     # 1. Initialize population
     population = [Individual(num_nodes, max_colors) for _ in range(pop_size)]
 
     # 2. Evaluate fitness of initial population
     for ind in population:
-        evaluate_fitness(ind, graph)
+        evaluate_fitness(ind, edges_array)
 
-    best_ever = max(population, key=lambda ind: ind.fitness).copy()
+    best_ever = min(population, key=lambda ind: ind.fitness).copy()
     generations_no_improvement = 0
     history = []
 
     # 3. Main loop Evolutionary process
     for gen in range(max_generations):
-        # Sort population by fitness (descending)
-        population.sort(key=lambda x: x.fitness, reverse=True)
+
+        # 4. Sort population by fitness (ascending = best first))
+        population.sort(key=lambda ind: ind.fitness)
 
         # Store hystory
         current_best = population[0]
         history.append(current_best.fitness)
 
         # Actualize best ever individual
-        if current_best.fitness > best_ever.fitness:
+        if current_best.fitness < best_ever.fitness:
             best_ever = current_best.copy()
             generations_no_improvement = 0
         else:
@@ -37,37 +41,44 @@ def run_genetic_algorithm(graph, pop_size, max_generations, max_colors,
 
         # Stationart condition
         # If no improvement for 100 generations, stop
-        if generations_no_improvement >= 100:
-            print(f"Stationary condition met at generation {gen}.")
+        if generations_no_improvement >= stationary_limit:
+            print(f"Stationary state reached at generation {gen}.")
             break
 
-        # New Population (Start with elites)
-        new_population = [ind.copy() for ind in population[:elitism_count]]
+        # New Population
+        new_population = []
 
-        # Fill the rest of the new population
-        while len(new_population) < pop_size:
-            # Selection
+        # 5. For pair in population size / 2
+        while len(new_population) < pop_size - elitism_count:
+
+            # 6. Selection
             parent1 = selection_func(population)
             parent2 = selection_func(population)
 
-            # Crossover
-            child1_genes, child2_genes = crossover_func(parent1, parent2)
+            # 7. Crossover
+            child1, child2 = crossover_func(parent1, parent2)
 
-            # Create child individuals
-            h1, h2 = Individual(num_nodes, max_colors), Individual(num_nodes, max_colors)
-            h1.genes, h2.genes = child1_genes, child2_genes
+            # 8. Mutation
+            if mutation_rate is None:
+                mutation_func(child1)
+                mutation_func(child2)
+            else:
+                mutation_func(child1, edges_array, mutation_rate)
+                mutation_func(child2, edges_array, mutation_rate)
 
-            # Mutation
-            mutation_func(h1, mutation_rate, max_colors)
-            mutation_func(h2, mutation_rate, max_colors)
+            # 9. New Population
+            new_population.extend([child1, child2])
 
-            # Evaluate fitness
-            evaluate_fitness(h1, graph)
-            evaluate_fitness(h2, graph)
+        # 10. Elitism (add best individuals from previous population)
+        elites = [population[i].copy() for i in range(elitism_count)]
+        new_population.extend(elites)
 
-            new_population.extend([h1, h2])
-
+        # 11. Replace population
         population = new_population[:pop_size]
+
+        # 12. Evaluate fitness of new population
+        for ind in population:
+            evaluate_fitness(ind, edges_array)
 
 
     return best_ever, history
